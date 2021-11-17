@@ -17,6 +17,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* SM_Block;
+
+	UPROPERTY(EditAnywhere)
+	int BlockIndex = 0;
 	
 protected:
 	// Called when the game starts or when spawned
