@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MinecraftCharacter.h"
+
+#include "EngineUtils.h"
 #include "MinecraftProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -82,7 +84,13 @@ AMinecraftCharacter::AMinecraftCharacter()
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+
+	//Setting up block handle variables
+	ArmReach = 1000;
 }
+
+//Begin Play
+//Called at player spawn ready to play
 
 void AMinecraftCharacter::BeginPlay()
 {
@@ -104,6 +112,16 @@ void AMinecraftCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 }
+
+//Event Tick
+//Called Every Frame
+
+void AMinecraftCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	CheckForBlock();
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -216,44 +234,6 @@ void AMinecraftCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FV
 	TouchItem.bIsPressed = false;
 }
 
-//Commenting this section out to be consistent with FPS BP template.
-//This allows the user to turn without using the right virtual joystick
-
-//void AMinecraftCharacter::TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location)
-//{
-//	if ((TouchItem.bIsPressed == true) && (TouchItem.FingerIndex == FingerIndex))
-//	{
-//		if (TouchItem.bIsPressed)
-//		{
-//			if (GetWorld() != nullptr)
-//			{
-//				UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
-//				if (ViewportClient != nullptr)
-//				{
-//					FVector MoveDelta = Location - TouchItem.Location;
-//					FVector2D ScreenSize;
-//					ViewportClient->GetViewportSize(ScreenSize);
-//					FVector2D ScaledDelta = FVector2D(MoveDelta.X, MoveDelta.Y) / ScreenSize;
-//					if (FMath::Abs(ScaledDelta.X) >= 4.0 / ScreenSize.X)
-//					{
-//						TouchItem.bMoved = true;
-//						float Value = ScaledDelta.X * BaseTurnRate;
-//						AddControllerYawInput(Value);
-//					}
-//					if (FMath::Abs(ScaledDelta.Y) >= 4.0 / ScreenSize.Y)
-//					{
-//						TouchItem.bMoved = true;
-//						float Value = ScaledDelta.Y * BaseTurnRate;
-//						AddControllerPitchInput(Value);
-//					}
-//					TouchItem.Location = Location;
-//				}
-//				TouchItem.Location = Location;
-//			}
-//		}
-//	}
-//}
-
 void AMinecraftCharacter::MoveForward(float Value)
 {
 	if (Value != 0.0f)
@@ -298,3 +278,43 @@ bool AMinecraftCharacter::EnableTouchscreenMovement(class UInputComponent* Playe
 	
 	return false;
 }
+
+void AMinecraftCharacter::CheckForBlock()
+{
+	//Setting up trace params
+	
+	FHitResult LineTraceHitResoult;
+
+	FVector StartPoint = FirstPersonCameraComponent->GetComponentLocation();
+	FVector EndPoint = ((FirstPersonCameraComponent->GetForwardVector() * ArmReach) + StartPoint);
+
+	FCollisionQueryParams CQP;
+	CQP.AddIgnoredActor(this);
+
+	//Fire trace by channel
+
+	GetWorld()->LineTraceSingleByChannel(LineTraceHitResoult, StartPoint, EndPoint, ECollisionChannel::ECC_WorldDynamic, CQP);
+
+	ABlock* PotentialBlock = Cast<ABlock>(LineTraceHitResoult.GetActor());
+
+	if(PotentialBlock != nullptr)
+	{
+		CurrentBlock = PotentialBlock;
+	}
+	else
+	{
+		CurrentBlock = nullptr;
+	}
+
+	if(CurrentBlock)
+	{
+		FString teststring = CurrentBlock->GetName();
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, teststring);
+	}
+
+
+
+	
+	
+}
+

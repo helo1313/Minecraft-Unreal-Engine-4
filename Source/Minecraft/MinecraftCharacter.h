@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Block.h"
 #include "MinecraftCharacter.generated.h"
+
 
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -57,6 +59,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -85,6 +89,19 @@ public:
 	/** Whether to use motion controller location for aiming. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint8 bUsingMotionControllers : 1;
+	
+
+private:
+	/** Check for block that player is currently looking at*/
+	void CheckForBlock();
+
+	/** Reference to block that player is currently looking at. */
+	UPROPERTY()
+	ABlock* CurrentBlock;
+
+	/** Player arm reach */
+	UPROPERTY()
+	float ArmReach;
 
 protected:
 	
